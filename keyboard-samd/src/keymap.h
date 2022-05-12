@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <drivers/uart.h>
 
+#define KEY_LAYERS 5
 #define KEY_COLUMNS 14
 #define KEY_ROWS 5
 #define REPORT_LENGTH 8
@@ -16,13 +17,16 @@ struct keypin {
 extern struct keypin hpins[KEY_COLUMNS];
 extern struct keypin vpins[KEY_ROWS];
 
-extern uint16_t keymap[KEY_ROWS][KEY_COLUMNS];
+extern uint16_t layers[KEY_LAYERS][KEY_ROWS][KEY_COLUMNS];
 extern bool keystate[KEY_ROWS][KEY_COLUMNS];
 extern uint8_t report[REPORT_LENGTH];
 
 void keyboard_init();
 void keyboard_scan();
 char* keyboard_report_string();
+
+// Transparent: use first layer
+#define KEY_TRANSP 0xffff
 
 // NOTE: the 0x01 prefix is to distingush from normal keys
 #define KEY_MOD_LCTRL  0x0101
