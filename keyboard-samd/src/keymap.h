@@ -18,10 +18,11 @@ extern struct keypin vpins[KEY_ROWS];
 
 extern uint16_t keymap[KEY_ROWS][KEY_COLUMNS];
 extern bool keystate[KEY_ROWS][KEY_COLUMNS];
+extern uint8_t report[REPORT_LENGTH];
 
 void keyboard_init();
 void keyboard_scan();
-char* keyboard_report();
+char* keyboard_report_string();
 
 // NOTE: the 0x01 prefix is to distingush from normal keys
 #define KEY_MOD_LCTRL  0x0101

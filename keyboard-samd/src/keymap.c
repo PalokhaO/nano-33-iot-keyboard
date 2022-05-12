@@ -5,6 +5,7 @@
 #include "devices.h"
 
 char report_string[REPORT_LENGTH * 2 + 1] = {0};
+uint8_t report[REPORT_LENGTH] = {0};
 
 struct keypin hpins[KEY_COLUMNS] = {
     {
@@ -122,10 +123,8 @@ void keyboard_scan() {
         }
         gpio_pin_set(hpins[j].gpio, hpins[j].pin, 0);
     }
-}
-
-char* keyboard_report() {
-    uint8_t report[REPORT_LENGTH] = {0};
+    
+    memset(report, 0, sizeof(report));
     int char_i = 2;
     for (int i = 0; i < KEY_ROWS; i++) {
         for (int j = 0; j < KEY_COLUMNS; j++) {
@@ -144,9 +143,10 @@ char* keyboard_report() {
             }
         }
     }
+}
 
-
-    for (unsigned int i = 0; i < REPORT_LENGTH; i++) {
+char* keyboard_report_string() {
+    for (unsigned int i = 0; i < sizeof(report); i++) {
         uint8_t nib1 = (report[i] >> 4) & 0x0F;
         uint8_t nib2 = (report[i] >> 0) & 0x0F;
         report_string[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
