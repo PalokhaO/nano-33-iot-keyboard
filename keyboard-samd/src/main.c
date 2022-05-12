@@ -7,6 +7,7 @@
 #include <zephyr.h>
 #include <sys/printk.h>
 #include <sys/reboot.h>
+#include <sys/time_units.h>
 #include <logging/log.h>
 #include <logging/log_ctrl.h>
 #include <usb/usb_device.h>
@@ -41,6 +42,9 @@ void setNinaProgrammable(bool programmable) {
 K_THREAD_STACK_DEFINE(my_stack_area, 1024);
 struct k_thread uart_thread_data;
 extern void uart_thread(void *, void *, void *);
+
+void callback(const struct device *dev,
+				struct uart_event *evt, void *user_data) {}
 
 void main(void)
 {
@@ -81,10 +85,34 @@ void main(void)
                 setNinaProgrammable(prog_nina);
             }
         } else {
+            char* report = keyboard_report();
+
+            // int ctr;
+            // uart_flow_ctrl_get(serialNina, UART_CFG_FLOW_CTRL_RTS_CTS, &ctr);
+            
+            
+            // printk("R");
+            // printk(report);
+            // printk("\n");
+
+            uart_poll_out(serialNina, 'R');
+            for (int i = 0; i < strlen(report); i++) {
+                uart_poll_out(serialNina, report[i]);
+            }
+            uart_poll_out(serialNina, '\r');
+            uart_poll_out(serialNina, '\n');
+            uart_poll_out(serialNina, '\n');
+
+            // uart_tx(serialNina, report, strlen(report), SYS_FOREVER_MS);
+
+            // uart_fifo_fill(serialNina, "R", 1);
+            // uart_fifo_fill(serialNina, report, strlen(report));
+            // uart_fifo_fill(serialNina, "\n", 1);
+
             // printk(keyboard_report());
             // printk("\n");
         }
-        k_sleep(K_MSEC(1));
+        k_sleep(K_MSEC(10));
 	}
 }
 

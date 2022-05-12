@@ -29,16 +29,16 @@ void serialInit() {
         .source_clk = UART_SCLK_APB,
     };
 
-    ESP_ERROR_CHECK(uart_driver_install(SERIAL_NUM, SERIAL_BUFFER_SIZE * 2, 0, 64, &SerialEventQueue, 0));
+    ESP_ERROR_CHECK(uart_driver_install(SERIAL_NUM, SERIAL_BUFFER_SIZE * 2, 0, SERIAL_BUFFER_SIZE, &SerialEventQueue, 0));
     ESP_ERROR_CHECK(uart_param_config(SERIAL_NUM, &uart_config));
-    assert(SerialDataQueue = xQueueCreate( 10, sizeof( char ) ));
+    assert(SerialDataQueue = xQueueCreate( SERIAL_BUFFER_SIZE, sizeof( char ) ));
 
 }
 
 void drainEventQueue() {
     uart_event_t event;
-    char* dataPacketBuffer;
     assert(SerialDataQueue);
+    char* dataPacketBuffer;
 
     while(xQueueReceive( SerialEventQueue, &(event), 0 )) {
         switch(event.type) {
@@ -64,8 +64,8 @@ void serialPrintln(char* text) {
 int serialReadLine(char* buffer, size_t maxLength) {
     drainEventQueue();
 
-    while(xQueueReceive(SerialDataQueue, lineBuffer + lineBufferPos, 0 )) {
-        if(*(lineBuffer + lineBufferPos) == '\n') {
+    while(xQueueReceive(SerialDataQueue, lineBuffer + lineBufferPos, 0)) {
+        if(lineBuffer[lineBufferPos] == '\n') {
             int charLength = lineBufferPos < (maxLength-1)
                 ? lineBufferPos + 1
                 : (maxLength - 1);

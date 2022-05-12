@@ -10,7 +10,7 @@ struct uart_config nina_conf = {
     .stop_bits=UART_CFG_STOP_BITS_1
 };
 
-static void interrupt_handler(struct device *dev, void* data)
+static void interrupt_handler(const struct device *dev, void* data)
 {
     struct device* forwardTo = (struct device*)data;
     uint8_t buffer;
@@ -23,6 +23,7 @@ static void interrupt_handler(struct device *dev, void* data)
         baudrate != nina_conf.baudrate
     ) {
         nina_conf.baudrate = baudrate;
+        uart_configure(dev, &nina_conf);
         uart_configure(forwardTo, &nina_conf);
     }
 
@@ -37,11 +38,11 @@ static void interrupt_handler(struct device *dev, void* data)
 void uart_thread(void *a, void *b, void *c) {
     uart_configure(serialNina, &nina_conf);
     uart_irq_rx_enable(serialNina);
-    uart_irq_callback_user_data_set(serialNina, interrupt_handler, serialUsb);
+    uart_irq_callback_user_data_set(serialNina, interrupt_handler, (void*)serialUsb);
 
     uart_configure(serialUsb, &nina_conf);
     uart_irq_rx_enable(serialUsb);
-    uart_irq_callback_user_data_set(serialUsb, interrupt_handler, serialNina);
+    uart_irq_callback_user_data_set(serialUsb, interrupt_handler, (void*)serialNina);
     while(true) {
         k_sleep(K_NSEC(10));
     }
