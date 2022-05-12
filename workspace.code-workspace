@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "keyboard-nina"
+		},
+		{
+			"path": "keyboard-samd"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"device.h": "c",
+			"string.h": "c"
+		}
+	}
+}
