@@ -15,6 +15,8 @@
 #include <drivers/uart.h>
 #include <drivers/gpio.h>
 
+#include <utils.h>
+
 #include "devices.h"
 #include "keymap.h"
 
@@ -51,7 +53,7 @@ static void in_ready_cb(const struct device *dev)
 	ARG_UNUSED(dev);
 }
 
-enum usb_dc_status_code usb_status;
+enum usb_dc_status_code usb_status = USB_DC_UNKNOWN;
 static void status_cb(enum usb_dc_status_code status, const uint8_t *param)
 {
     usb_status = status;
@@ -59,12 +61,27 @@ static void status_cb(enum usb_dc_status_code status, const uint8_t *param)
 
 static const struct hid_ops ops = {
 	.int_in_ready = in_ready_cb,
+    // .get
 };
 void callback(const struct device *dev,
 				struct uart_event *evt, void *user_data) {}
 
 void main(void)
 {
+    hid_dev = device_get_binding("HID_0");
+    if (hid_dev == NULL) {
+		printk("Cannot get USB HID 0 Device");
+		return;
+	}
+    
+	usb_hid_register_device(hid_dev, hid_kbd_report_desc,
+        sizeof(hid_kbd_report_desc), &ops);
+
+	if(usb_hid_init(hid_dev)) {
+        printk("Cannot init USB HID");
+        return;
+    }
+    
 	if (usb_enable(status_cb)) {
 		return;
 	}
@@ -89,23 +106,10 @@ void main(void)
         5, 0, K_NO_WAIT
     );
 
-    hid_dev = device_get_binding("HID_0");
-    if (hid_dev == NULL) {
-		printk("Cannot get USB HID 0 Device");
-		return;
-	}
-    
-	usb_hid_register_device(hid_dev, hid_kbd_report_desc,
-        sizeof(hid_kbd_report_desc), &ops);
-
-	if(usb_hid_init(hid_dev)) {
-        printk("Cannot init USB HID");
-        return;
-    }
     keyboard_scan();
     int prog_nina = keystate[4][11];
     setNinaProgrammable(prog_nina);
-    k_sleep(K_MSEC(500));
+    k_sleep(K_SECONDS(1));
 	while(true) {
         keyboard_scan();
         if (prog_nina) {
@@ -114,14 +118,27 @@ void main(void)
                 setNinaProgrammable(prog_nina);
             }
         } else {
-            char* report_string = keyboard_report_string();
-            if (usb_status == USB_DC_CONFIGURED) {
-                if (report_string[4] != '0' || report_string[5] != '0') {
-                    printk(report_string);
-                }
-                hid_int_ep_write(hid_dev, report, sizeof(report), NULL);
-            } else {
-                // printk("Usb status: %d", usb_status);
+            char report_string[sizeof(report) + 2 + 1];
+            data_to_hex(report, sizeof(report), report_string);
+            
+            if (hid_int_ep_write(hid_dev, report, sizeof(report), NULL)) {
+                // If we're not connected to USB...
+                printk("Usb status: %d\n", usb_status);
+            // }
+                // printk(report_string);
+                // printk("\n");
+
+                // int reportLength = strlen(report_string)/2;
+                // uint8_t* report = malloc(reportLength);
+                // hex_to_data(report_string, report, reportLength);
+                
+                // char* str = malloc(reportLength*2+1);
+                // data_to_hex(report, reportLength, str);
+                // printk("Received report: ");
+                // printk(str);
+
+                // free(str);
+                // free(report);
 
                 uart_poll_out(serialNina, 'R');
                 for (int i = 0; i < strlen(report_string); i++) {

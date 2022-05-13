@@ -159,13 +159,3 @@ void keyboard_scan() {
     }
 }
 
-char* keyboard_report_string() {
-    for (unsigned int i = 0; i < sizeof(report); i++) {
-        uint8_t nib1 = (report[i] >> 4) & 0x0F;
-        uint8_t nib2 = (report[i] >> 0) & 0x0F;
-        report_string[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
-        report_string[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
-    }
-
-    return report_string;
-}

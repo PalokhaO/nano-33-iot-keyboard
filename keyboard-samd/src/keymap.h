@@ -23,7 +23,6 @@ extern uint8_t report[REPORT_LENGTH];
 
 void keyboard_init();
 void keyboard_scan();
-char* keyboard_report_string();
 
 // Transparent: use first layer
 #define KEY_TRANSP 0xffff

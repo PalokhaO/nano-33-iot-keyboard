@@ -5,12 +5,19 @@
 		},
 		{
 			"path": "keyboard-samd"
+		},
+		{
+			"path": "lib"
 		}
 	],
 	"settings": {
 		"files.associations": {
 			"device.h": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"stdint.h": "c",
+			"freertos.h": "c",
+			"utils.h": "c",
+			"ble_hidd_demo_main.h": "c"
 		}
 	}
 }

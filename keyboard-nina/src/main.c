@@ -1,15 +1,34 @@
+#include <string.h>
+#include <stdint.h>
 #include <driver/gpio.h>
-#include "serial-communication.h"
 
-char lineBuffer[SERIAL_BUFFER_SIZE];
+#include <utils.h>
+
+#include "serial-communication.h"
+#include "ble_hid/ble_hidd_demo_main.h"
+
 
 void echoTask() {
+    char lineBuffer[SERIAL_BUFFER_SIZE]; 
     serialInit();
+    uint8_t report[8] = {0};
+    char str[17] = {0};
 
     while(true) {
         while(serialReadLine(lineBuffer, SERIAL_BUFFER_SIZE)) {
-            serialPrintln("Received line: ");
-            serialPrintln(lineBuffer);
+            if(lineBuffer[0] == 'R') {
+                int reportLength = strlen(lineBuffer + 1)/2;
+                hex_to_data(lineBuffer + 1, report, reportLength);
+                hid_dev_send_report(hidd_le_env.gatt_if, hid_conn_id,
+                        HID_RPT_ID_KEY_IN, HID_REPORT_TYPE_INPUT, reportLength, report);
+                
+                data_to_hex(report, reportLength, str);
+                serialPrintln("Received report: ");
+                serialPrintln(str);
+            } else {
+                serialPrintln("Received line: ");
+                serialPrintln(lineBuffer);
+            }
         }
         vTaskDelay(1/portTICK_RATE_MS);
     }
@@ -31,11 +50,13 @@ void app_main() {
     static uint8_t ucParameterToPass;
     TaskHandle_t xHandle = NULL;
 
+    ble_hidd_init();
+
     // Create the task, storing the handle.  Note that the passed parameter ucParameterToPass
     // must exist for the lifetime of the task, so in this case is declared static.  If it was just an
     // an automatic stack variable it might no longer exist, or at least have been corrupted, by the time
     // the new task attempts to access it.
-    xTaskCreate( echoTask, "echo", 4096, &ucParameterToPass, tskIDLE_PRIORITY, &xHandle );
+    xTaskCreate( echoTask, "echo", 1024 * 8, &ucParameterToPass, tskIDLE_PRIORITY, &xHandle );
     configASSERT( xHandle );
 
     while (true) {

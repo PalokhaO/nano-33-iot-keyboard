@@ -70,7 +70,7 @@ int serialReadLine(char* buffer, size_t maxLength) {
                 ? lineBufferPos + 1
                 : (maxLength - 1);
             strncpy(buffer, lineBuffer, charLength);
-            lineBuffer[charLength] = '\0';
+            buffer[charLength] = '\0';
             lineBufferPos = 0;
             return charLength;
         } else {
